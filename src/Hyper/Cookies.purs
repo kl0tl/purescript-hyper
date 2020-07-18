@@ -20,7 +20,6 @@ import Data.Array (catMaybes, cons, filter, foldMap, uncons, (:))
 import Data.Either (Either)
 import Data.JSDate (JSDate, toUTCString)
 import Data.Maybe (Maybe(..), maybe)
-import Data.Newtype (class Newtype, unwrap)
 import Data.NonEmpty (NonEmpty(NonEmpty), (:|))
 import Data.NonEmpty as NonEmpty
 import Data.String (Pattern(..), joinWith, split, trim)
@@ -86,7 +85,6 @@ cookies = Ix.do
 
 data SameSite = Strict | Lax
 newtype MaxAge = MaxAge Int
-derive instance newtypeMaxAge :: Newtype MaxAge _
 
 maxAge :: Int -> Maybe MaxAge
 maxAge a | a < 0 = Nothing
@@ -119,7 +117,7 @@ setCookieHeaderValue :: Name -> Value -> CookieAttributes -> String
 setCookieHeaderValue key value { comment, expires, path, maxAge: m, domain, secure, httpOnly, sameSite } =
   [ (Tuple "Comment" <<< unsafeEncodeURIComponent) <$> comment
   , (Tuple "Expires" <<< toUTCString) <$> expires
-  , (Tuple "Max-Age" <<< show <<< unwrap) <$> m
+  , (\(MaxAge maxAge) -> Tuple "Max-Age" $ show maxAge) <$> m
   , Tuple "Domain" <$> domain
   , Tuple "Path" <$> path
   , Tuple "SameSite" <<< sameSiteSer <$> sameSite
